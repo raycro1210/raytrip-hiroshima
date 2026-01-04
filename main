@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廣島・瀨戶內之息：八日山海與和平巡禮</title>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (Vanilla JS version) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fff5f7; /* 淺櫻花色背景 */
+            background-image: radial-gradient(#feb2b2 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        h1, h2, h3, .font-zen {
+            font-family: 'Zen Maru Gothic', sans-serif;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .text-torii { color: #9b2c2c; }
+        .bg-torii { background-color: #9b2c2c; }
+        .border-torii { border-color: #9b2c2c; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICON 修正區塊 (解決白畫面問題) ---
+        // 將 Lucide 的原始數據轉換為 React 元件
+        const LucideIcon = ({ name, size = 24, className = "" }) => {
+            // 檢查 window.lucide 是否存在以及該圖示是否存在
+            if (!window.lucide || !window.lucide.icons || !window.lucide.icons[name]) {
+                return <span className="text-xs">?</span>;
+            }
+            
+            const iconData = window.lucide.icons[name];
+            
+            return React.createElement(
+                'svg',
+                {
+                    xmlns: "http://www.w3.org/2000/svg",
+                    width: size,
+                    height: size,
+                    viewBox: "0 0 24 24",
+                    fill: "none",
+                    stroke: "currentColor",
+                    strokeWidth: "2",
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    className: className
+                },
+                iconData.map((child, index) => {
+                    const [tag, attrs] = child;
+                    return React.createElement(tag, { ...attrs, key: index });
+                })
+            );
+        };
+
+        // 定義會用到的圖示元件
+        const MapPin = (props) => <LucideIcon name="MapPin" {...props} />;
+        const Clock = (props) => <LucideIcon name="Clock" {...props} />;
+        const Car = (props) => <LucideIcon name="Car" {...props} />;
+        const ExternalLink = (props) => <LucideIcon name="ExternalLink" {...props} />;
+        const Calculator = (props) => <LucideIcon name="Calculator" {...props} />;
+        const ArrowLeft = (props) => <LucideIcon name="ArrowLeft" {...props} />;
+        const Train = (props) => <LucideIcon name="Train" {...props} />;
+        const UtensilsCrossed = (props) => <LucideIcon name="UtensilsCrossed" {...props} />;
+        const Info = (props) => <LucideIcon name="Info" {...props} />;
+        const Leaf = (props) => <LucideIcon name="Leaf" {...props} />;
+        const Flower2 = (props) => <LucideIcon name="Flower2" {...props} />;
+        const Anchor = (props) => <LucideIcon name="Anchor" {...props} />;
+
+        // --- 行程資料庫 (完整資料) ---
+        const ITINERARY = [
+            {
+                day: 1,
+                date: "2025-01-28",
+                title: "廣島初見：空港與市街的熱鬧序曲",
+                items: [
+                    { time: "07:00", transport: "飛行", name: "桃園國際機場 (T2)", address: "台灣桃園市大園區", desc: "旅程的起點。搭乘中華航空 CI112 班機 (07:00-10:15) 直飛廣島，帶著期待的心情準備展開為期八天的瀨戶內海之旅。", cost: 0, map: "", web: "", img: "https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?w=800&q=80" },
+                    { time: "11:30", transport: "180分", name: "廣島機場", address: "廣島縣三原市本郷町善入寺64-31", desc: "抵達廣島的門戶。機場雖小但機能俱全，設有許多廣島特色裝飾。在此處整理行囊，準備前往租車櫃台辦理手續。", cost: 0, map: "https://maps.google.com/?cid=11446563014474813844", web: "http://www.hij.airport.jp/", img: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=800&q=80" },
+                    { time: "12:00", transport: "6分", name: "日產租車 廣島機場店", address: "廣島縣三原市本郷町善入寺64-31", desc: "領取這幾天的代步工具。請務必確認保險內容與ETC卡片，設定導航後即可開啟廣島自駕冒險。", cost: 15000, map: "https://maps.google.com/?cid=4445263458050298852", web: "https://nissan-rentacar.com/shops/3M2G1", img: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80" },
+                    { time: "13:00", transport: "60分", name: "袋町小學平和資料館", address: "廣島市中區袋町6-36", desc: "這座小學在原爆後成為臨時救護所。牆上保留著當時尋找親人的粉筆留言，是見證歷史傷痕與親情羈絆的重要遺址。", cost: 0, map: "https://maps.google.com/?cid=2619771237726982924", web: "http://www.fukuromachi-e.edu.city.hiroshima.jp/shiryoukan-index.htm", img: "https://images.unsplash.com/photo-1597825762299-a681df77263b?w=800&q=80" },
+                    { time: "14:30", transport: "4分", name: "ホテル呉竹荘広島大手町", address: "廣島市中區大手町3-7-3", desc: "位於市中心的便捷飯店，交通四通八達。辦理入住手續並安置行李，稍微休息一下，準備迎接下午的購物行程。", cost: 0, map: "https://maps.google.com/?cid=18207534889234640725", web: "http://www.kuretake-inn.com/hiroshima/", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80" },
+                    { time: "15:00", transport: "20分", name: "廣島三越", address: "廣島市中區胡町5-1", desc: "廣島的高級百貨代表，B1的食品街是尋找精緻伴手禮與當地甜點的絕佳去處，感受日式百貨的貼心服務。", cost: 3000, map: "https://maps.google.com/?cid=1049589309799818121", web: "http://mitsukoshi.mistore.jp/store/hiroshima/index.html", img: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800&q=80" },
+                    { time: "16:00", transport: "1分", name: "福屋 八丁堀本店", address: "廣島市中區胡町6-26", desc: "廣島在地的老牌百貨公司，見證了城市的復興。擁有豐富的廣島鯉魚隊周邊商品與在地生活用品。", cost: 2000, map: "https://maps.google.com/?cid=14652498324412379907", web: "https://www.fukuya-dept.co.jp/honten/", img: "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800&q=80" },
+                    { time: "17:00", transport: "3分", name: "廣島PARCO 本館", address: "廣島市中區本通10-1", desc: "廣島年輕人的潮流聖地，集結了最新的服飾品牌、雜貨與特色咖啡廳。是感受廣島時尚脈動的最佳地點。", cost: 5000, map: "https://maps.google.com/?cid=17934901717583108692", web: "https://hiroshima.parco.jp/?utm_source=mybusiness", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80" },
+                    { time: "19:30", transport: "5分", name: "Akamatsu Pharmacy / WEGO", address: "廣島市中區本通", desc: "本通商店街內的熱門藥妝店與古著店。在此補齊旅途所需的藥妝用品，並挖掘獨特的日系復古服飾。", cost: 3000, map: "https://maps.google.com/?cid=8727386662861180756", web: "https://aka-matsu.co.jp/?utm_source=google&utm_medium=maps", img: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=800&q=80" },
+                    { time: "20:30", transport: "1分", name: "晚餐：餃夢中 或 大眾鳥酒場", address: "廣島市中區本通", desc: "晚餐二選一：品嚐皮薄餡多的日式煎餃，或是到熱鬧的燒鳥居酒屋享受串燒與啤酒，體驗廣島的夜生活。", cost: 2500, map: "https://maps.google.com/?cid=17309241527177008235", web: "https://www.hotpepper.jp/strJ004005003/", img: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800&q=80" },
+                    { time: "22:30", transport: "12分", name: "返回飯店休息", address: "廣島市中區大手町3-7-3", desc: "結束第一天充實的行程，返回飯店。可以泡個澡消除疲勞，為明天的藝術與美食之旅養精蓄銳。", cost: 0, map: "https://maps.google.com/?cid=18275565403798422350", web: "http://www.kuretake-inn.com/hiroshima/", img: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&q=80" }
+                ]
+            },
+            {
+                day: 2,
+                date: "2025-01-29",
+                title: "廣島藝文：建築美學與御好燒之魂",
+                items: [
+                    { time: "07:00", transport: "", name: "飯店出發", address: "廣島市中區大手町", desc: "早安廣島！整理好隨身物品，準備迎接充滿藝術氣息與美食的一天。", cost: 0, map: "", web: "", img: "https://images.unsplash.com/photo-1504812328117-9003848b89d4?w=800&q=80" },
+                    { time: "08:00", transport: "3分", name: "Ruhe Brazil (早餐)", address: "廣島市中區大手町", desc: "廣島知名的老派喫茶店。點一份經典的 Morning Set，在復古溫馨的氛圍中享受咖啡香與烤吐司。", cost: 800, map: "https://maps.google.com/?cid=17380439951603918832", web: "https://s.tabelog.com/tw/hiroshima/A3401/A340116/34006008/", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80" },
+                    { time: "09:30", transport: "3分", name: "Urbain飯店廣島中央 (寄放行李)", address: "廣島市中區鉄砲町5-20", desc: "今晚將更換住宿地點，先前往 Urbain 飯店寄放行李，讓接下來的行程更加輕便。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80" },
+                    { time: "10:00", transport: "12分", name: "WoodEgg お好み焼館", address: "廣島市西區商工中心7-4-5", desc: "由 Otafuku 醬汁設立的博物館。深入了解廣島燒的歷史與文化，還能參觀工廠生產線。", cost: 1000, map: "https://maps.google.com/?cid=412925167896662375", web: "https://www.otafuku.co.jp/visit/wood-egg/", img: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80" },
+                    { time: "11:40", transport: "9分", name: "五日市 八昌 (午餐)", address: "廣島市佐伯區五日市中央", desc: "廣島燒的名店！職人精心煎製的麵條酥脆、蔬菜鮮甜，搭配特製醬汁，是來到廣島必吃的靈魂美食。", cost: 1500, map: "https://maps.google.com/?cid=5961402254687684147", web: "https://www.hassho5.com/", img: "https://images.unsplash.com/photo-1595250005128-4663738f6733?w=800&q=80" },
+                    { time: "13:30", transport: "26分", name: "下瀨美術館", address: "廣島縣大竹市晴海2-10-50", desc: "由建築大師坂茂設計，漂浮在水盤上的可移動展廳是最大特色。館內收藏豐富的玻璃工藝品，景色如畫。", cost: 1800, map: "https://maps.google.com/?cid=11467065432662569603", web: "https://simose-museum.jp/", img: "https://images.unsplash.com/photo-1518998053901-5348d396916b?w=800&q=80" },
+                    { time: "16:00", transport: "4分", name: "廣島ALPARK 東棟", address: "廣島市西區井口明神1-16-1", desc: "擁有世界最大級無印良品的購物中心。寬敞的空間展示了各類生活用品與食品，是購物愛好者的天堂。", cost: 3000, map: "https://maps.google.com/?cid=6972363646572645164", web: "https://www.alpark.jp/", img: "https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?w=800&q=80" },
+                    { time: "18:00", transport: "11分", name: "Lect (蔦屋書店/晚餐)", address: "廣島市西區扇2-1-45", desc: "結合知性與美食的複合設施。在擁有巨大書牆的蔦屋書店漫步，並在美食街享用晚餐，度過優雅的夜晚。", cost: 2500, map: "https://maps.google.com/?cid=12278861453415376781", web: "https://lect.izumi.jp/", img: "https://images.unsplash.com/photo-1507842217121-ad959604be74?w=800&q=80" },
+                    { time: "20:00", transport: "21分", name: "Urbain飯店廣島中央", address: "廣島市中區鉄砲町5-20", desc: "辦理正式入住。這間飯店以提供免費飲料吧與大浴場聞名，能徹底放鬆身心。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" },
+                    { time: "20:30", transport: "6分", name: "返回吳竹莊 (取遺留物?)", address: "廣島市中區大手町3-7-3", desc: "如有需要，返回前一晚的飯店處理事務。(行程備註項目，視情況調整)", cost: 0, map: "https://maps.google.com/?cid=18207534889234640725", web: "http://www.kuretake-inn.com/hiroshima/", img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80" }
+                ]
+            },
+            {
+                day: 3,
+                date: "2025-01-30",
+                title: "廣島秘境：神龍傳說與妖怪博物館",
+                items: [
+                    { time: "06:30", transport: "", name: "飯店早餐", address: "廣島市中區", desc: "享用飯店提供的豐盛自助早餐，為今天要前往廣島北部的長途車程儲備滿滿能量。", cost: 0, map: "", web: "", img: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=800&q=80" },
+                    { time: "07:30", transport: "6分", name: "Urbain飯店廣島中央 (出發)", address: "廣島市中區鉄砲町5-20", desc: "集合出發！檢查油箱，設定導航，前往廣島縣東北部的庄原與三次地區，探索神秘的傳說之地。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80" },
+                    { time: "09:30", transport: "110分", name: "神龍橋", address: "廣島縣神石高原町", desc: "土木學會選獎的土木遺產。紅色的橋身橫跨在深邃的溪谷之上，彷彿巨龍飛躍，景色壯麗。", cost: 0, map: "https://maps.google.com/?cid=9262614486461796042", web: "https://www.pref.hiroshima.lg.jp/soshiki/97/divinegon-bridge.html", img: "https://images.unsplash.com/photo-1519114056088-b877fe073a5e?w=800&q=80" },
+                    { time: "09:45", transport: "15分", name: "帝釋峽 (まほろばの里)", address: "廣島縣庄原市", desc: "日本百景之一。石灰岩台地經侵蝕形成的峽谷，擁有雄偉的「雄橋」天然橋與清澈溪流，是健行賞楓名所。", cost: 500, map: "https://maps.google.com/?cid=7453408985682858346", web: "https://www.city.shobara.hiroshima.jp/main/education/shisetsu/cat01/cat/post_1456.html", img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80" },
+                    { time: "13:00", transport: "54分", name: "三次物怪博物館", address: "廣島縣三次市三次町1691-4", desc: "日本第一座以「妖怪」為主題的博物館。展示了稻生平太郎傳說等豐富的妖怪資料，既神秘又有趣。", cost: 600, map: "https://maps.google.com/?cid=8210358989436200545", web: "https://miyoshi-mononoke.jp/", img: "https://images.unsplash.com/photo-1599557613583-09436bc175f0?w=800&q=80" },
+                    { time: "14:30", transport: "4分", name: "辻村壽三郎人形館", address: "廣島縣三次市", desc: "展示人偶大師辻村壽三郎的作品。精緻生動的人偶彷彿擁有靈魂，展現出極高的藝術價值。", cost: 800, map: "https://maps.google.com/?cid=3065167412324210185", web: "https://jyusaburo-museum.com/", img: "https://images.unsplash.com/photo-1558258385-d72b251952a1?w=800&q=80" },
+                    { time: "17:00", transport: "80分", name: "Minamoa Hiroshima", address: "廣島車站新大樓", desc: "晚餐前往廣島車站新開幕的商業設施。推薦這裡的「超強立吞壽司」，食材新鮮且價格實惠。", cost: 3000, map: "https://maps.google.com/?cid=7459810096448482344", web: "https://www.minamoa-ekie.jp/", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80" },
+                    { time: "20:30", transport: "4分", name: "Urbain飯店廣島中央", address: "廣島市中區鉄砲町5-20", desc: "結束長途駕駛的一天，返回舒適的飯店。可以使用飯店的大浴場，舒緩駕駛的疲勞。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" }
+                ]
+            },
+            {
+                day: 4,
+                date: "2025-01-31",
+                title: "廣島神域：宮島嚴島神社與海之鳥居",
+                items: [
+                    { time: "06:45", transport: "", name: "早起出發", address: "廣島市區", desc: "今天前往神之島「宮島」。為了避開人潮並趕上渡輪，需要稍微早起出發。", cost: 0, map: "", web: "", img: "https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80" },
+                    { time: "07:40", transport: "31分", name: "宮島口渡輪乘船處", address: "廿日市市宮島口", desc: "搭乘JR西日本宮島渡輪 (07:40班次)。這條航線會特別繞行靠近大鳥居，是拍攝海上鳥居的最佳機會。", cost: 360, map: "https://maps.google.com/?cid=538089527238927264", web: "http://jr-miyajimaferry.co.jp/", img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80" },
+                    { time: "08:40", transport: "37分", name: "宮島松大汽船渡輪碼頭", address: "廿日市市宮島町", desc: "抵達宮島。島上隨處可見可愛的鹿群，但請注意手上的食物與地圖，小心被鹿咬走喔。", cost: 0, map: "https://maps.google.com/?cid=17356885450234424502", web: "http://miyajima-matsudai.co.jp/", img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=800&q=80" },
+                    { time: "09:10", transport: "22分", name: "宮島纜車", address: "廿日市市宮島町紅葉谷", desc: "搭乘纜車前往彌山。隨著高度爬升，瀨戶內海的群島美景盡收眼底，感受被原始森林包圍的寧靜。", cost: 2000, map: "https://maps.google.com/?cid=1684064049482664941", web: "http://miyajima-ropeway.info/", img: "https://images.unsplash.com/photo-1536701546950-8b1d9773b062?w=800&q=80" },
+                    { time: "09:40", transport: "30分", name: "獅子岩展望台", address: "宮島彌山", desc: "纜車終點站旁的展望台。這裡視野極佳，可以360度眺望四國山脈與瀨戶內海的絕景。", cost: 0, map: "https://maps.google.com/?cid=16147654248468592728", web: "http://www.miyajima.or.jp/course/course_ropeway.html", img: "https://images.unsplash.com/photo-1549643276-fbc2bd574f80?w=800&q=80" },
+                    { time: "10:30", transport: "30分", name: "豐國神社 (千疊閣)", address: "廿日市市宮島町", desc: "由豐臣秀吉下令建造的大經堂。巨大的木造建築內部寬敞涼爽，雖未完工卻充滿歷史的滄桑美感。", cost: 100, map: "https://maps.google.com/?cid=3072251389833452451", web: "https://www.itsukushimajinja.jp/jp/setumatusya.html#setumatusya05", img: "https://images.unsplash.com/photo-1589463349208-842c09199993?w=800&q=80" },
+                    { time: "11:15", transport: "5分", name: "嚴島神社 本殿・拝殿", address: "廿日市市宮島町1-1", desc: "世界文化遺產。朱紅色的迴廊建在海上，漲潮時彷彿漂浮在水面。參拜祈求平安，並拍攝經典的大鳥居。", cost: 300, map: "https://maps.google.com/?cid=16871866785993822781", web: "http://www.itsukushimajinja.jp/index.html", img: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&q=80" },
+                    { time: "11:50", transport: "2分", name: "表參道美食 (牡蠣可樂餅)", address: "宮島表參道商店街", desc: "午餐時間！在商店街品嚐宮島名物。除了必吃的烤牡蠣，熱騰騰的牡蠣可樂餅與紅葉饅頭也不容錯過。", cost: 2000, map: "https://maps.google.com/?cid=10381882966744529514", web: "https://www.instagram.com/miyajima.umaimonokan/", img: "https://images.unsplash.com/photo-1625425661448-132d75dfa3d4?w=800&q=80" },
+                    { time: "12:00", transport: "11分", name: "宮島歷史民俗資料館", address: "廿日市市宮島町57", desc: "保留了江戶時代豪商的屋敷。展示宮島的歷史文物與生活器具，庭園造景也相當優美。", cost: 300, map: "https://maps.google.com/?cid=17120032051521553722", web: "http://members.fch.ne.jp/miyajima-rekimin/", img: "https://images.unsplash.com/photo-1590924403309-8d77a2846983?w=800&q=80" },
+                    { time: "15:10", transport: "54分", name: "美川姆谷 (Mikawa Mu Valley)", address: "山口縣岩國市美川町", desc: "由廢棄礦坑改建的地底探險主題樂園。在充滿神秘氣氛的地下空間尋寶解謎，體驗不一樣的冒險。", cost: 1500, map: "https://maps.google.com/?cid=107009674113356575", web: "http://muvalley.com/", img: "https://images.unsplash.com/photo-1516934024742-b461fba47600?w=800&q=80" },
+                    { time: "18:30", transport: "75分", name: "Masui (晚餐)", address: "廣島市中區", desc: "廣島的老字號肉料理名店。以經濟實惠的價格品嚐高品質的壽喜燒或牛排，大口吃肉超級滿足。", cost: 4000, map: "https://maps.google.com/?cid=16625515853004973411", web: "https://tabelog.com/hiroshima/A3401/A340108/34001743/", img: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80" },
+                    { time: "20:00", transport: "2分", name: "Urbain飯店廣島中央", address: "廣島市中區鉄砲町5-20", desc: "充實的一天結束，返回溫暖的飯店休息。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" }
+                ]
+            },
+            {
+                day: 5,
+                date: "2025-02-01",
+                title: "廣島海風：大久野島萌兔與竹原老街",
+                items: [
+                    { time: "06:30", transport: "", name: "早起出發", address: "廣島市", desc: "今天的目的地是「兔子島」！需要配合船班時間，一早出發前往忠海港。", cost: 0, map: "", web: "", img: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&q=80" },
+                    { time: "08:10", transport: "70分", name: "忠海港 (渡輪)", address: "竹原市忠海中町", desc: "前往大久野島的門戶。港口有販售兔子飼料與可愛的周邊商品，記得先買好飼料再登船喔。", cost: 310, map: "https://maps.google.com/?cid=11721140544496195449", web: "http://sanyo-shosen.jp/omishima/", img: "https://images.unsplash.com/photo-1535262412227-85541e910204?w=800&q=80" },
+                    { time: "09:00", transport: "37分", name: "大久野島 (毒氣資料館)", address: "竹原市忠海町大久野島", desc: "這座島上棲息著數百隻野生兔子，非常親人可愛。同時這裡也曾是製造毒氣的秘密基地，參觀資料館反思和平。", cost: 100, map: "https://maps.google.com/?cid=17537680937102150433", web: "https://www.takeharakankou.jp/spot/4346", img: "https://images.unsplash.com/photo-1589926838848-18e0018b1397?w=800&q=80" },
+                    { time: "11:30", transport: "52分", name: "農家餐廳 西野", address: "竹原市吉名町", desc: "當地人氣的農家自助餐廳。使用自家種植的新鮮蔬菜製作樸實美味的料理，健康又滿足。", cost: 1600, map: "https://maps.google.com/?cid=5639360238445469409", web: "https://www.nouka2474.com/", img: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80" },
+                    { time: "13:00", transport: "10分", name: "竹原町街景保存地區", address: "竹原市本町", desc: "被稱為「安藝的小京都」。保存了江戶時代的古老建築，漫步在石板路上，彷彿穿越時空。也是日劇《阿政與愛莉》的拍攝地。", cost: 0, map: "https://maps.google.com/?cid=16049157012541070488", web: "", img: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&q=80" },
+                    { time: "15:30", transport: "70分", name: "海上自衛隊吳史料館 (鐵鯨館)", address: "吳市寶町5-32", desc: "日本唯一展示真實退役潛水艇的博物館。可以實際進入潛水艇內部參觀，了解海上自衛隊的歷史與生活。", cost: 0, map: "https://maps.google.com/?cid=11077672776551777707", web: "https://www.jmsdf-kure-museum.go.jp/", img: "https://images.unsplash.com/photo-1563725655-b77a760d696c?w=800&q=80" },
+                    { time: "18:00", transport: "8分", name: "Kakitomo (牡蠣晚餐)", address: "吳市", desc: "晚餐在吳市享用著名的牡蠣料理。這裡的牡蠣船餐廳別具風味，能品嚐到最新鮮肥美的瀨戶內海牡蠣。", cost: 4000, map: "https://maps.google.com/?cid=18381359821762874816", web: "https://tabelog.com/hiroshima/A3404/A340401/34014628/", img: "https://images.unsplash.com/photo-1629832626019-20f7797e5967?w=800&q=80" },
+                    { time: "20:00", transport: "35分", name: "Urbain飯店廣島中央", address: "廣島市中區", desc: "返回廣島市區飯店。整理今天在兔子島拍的可愛照片，度過愉快的夜晚。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" }
+                ]
+            },
+            {
+                day: 6,
+                date: "2025-02-02",
+                title: "廣島祈願：和平紀念公園與時尚購物",
+                items: [
+                    { time: "08:00", transport: "3分", name: "Park South Sandwich (早餐)", address: "廣島市中區袋町", desc: "位於公園旁的人氣三明治店。在充滿綠意的環境中享用手作三明治與咖啡，開啟美好的一天。", cost: 1000, map: "https://maps.google.com/?cid=7168500843316359021", web: "https://instagram.com/park_south_sandwich?utm_medium=copy_link", img: "https://images.unsplash.com/photo-1509721434272-b79147e0e708?w=800&q=80" },
+                    { time: "08:30", transport: "7分", name: "廣島和平紀念資料館", address: "廣島市中區中島町1-2", desc: "詳細記錄了原爆的慘狀與核武的可怕。透過遺物與影像，深刻感受和平的珍貴，是造訪廣島必去的場所。", cost: 200, map: "https://maps.google.com/?cid=17379504698839695744", web: "https://hpmmuseum.jp/", img: "https://images.unsplash.com/photo-1596720626080-82a88a032906?w=800&q=80" },
+                    { time: "10:00", transport: "4分", name: "原子彈爆炸圓頂屋", address: "廣島市中區大手町1-10", desc: "世界文化遺產。這座建築奇蹟般地在原爆中心附近屹立未倒，靜靜地訴說著那段歷史，成為祈求永久和平的象徵。", cost: 0, map: "https://maps.google.com/?cid=3811847912070496406", web: "https://www.city.hiroshima.lg.jp/atomicbomb-peace/index.html", img: "https://images.unsplash.com/photo-1570444383182-359560a6316f?w=800&q=80" },
+                    { time: "10:15", transport: "1分", name: "廣島紙鶴塔", address: "廣島市中區大手町1-2-1", desc: "位於原爆圓頂屋旁的新地標。從頂樓展望台可以俯瞰廣島市景，還能體驗摺紙鶴祈福，將心意投入玻璃牆中。", cost: 1700, map: "https://maps.google.com/?cid=14178183066394151964", web: "https://www.city.hiroshima.lg.jp/atomicbomb-peace/index.html", img: "https://images.unsplash.com/photo-1528360983277-13d9012356ee?w=800&q=80" },
+                    { time: "11:40", transport: "40分", name: "THE OUTLETS 廣島", address: "廣島市佐伯區石內東4-1-1", desc: "廣島最大的暢貨中心。集結眾多國際精品與運動品牌，還有娛樂設施，是享受購物與美食的絕佳去處。", cost: 10000, map: "https://maps.google.com/?cid=17591004245757409610", web: "https://the-outlets-hiroshima.com/?utm_source=google_maps&utm_medium=organic&utm_campaign=website", img: "https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?w=800&q=80" },
+                    { time: "14:40", transport: "42分", name: "紙屋町Shareo", address: "廣島市中區基町地下街", desc: "廣島市中心的地下商店街。連接多個百貨公司，不怕日曬雨淋，可以輕鬆逛逛服飾雜貨店。", cost: 2000, map: "https://maps.google.com/?cid=7459810096448482344", web: "https://www.minamoa-ekie.jp/", img: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800&q=80" },
+                    { time: "19:00", transport: "1分", name: "KIWA (鐵板燒晚餐)", address: "廣島市中區", desc: "精緻的鐵板燒料理。看著主廚在眼前熟練地料理頂級食材，視覺與味覺的雙重饗宴，為旅程增添奢華回憶。", cost: 5000, map: "https://maps.google.com/?cid=18336353238024406280", web: "https://instagram.com/teppan_kiwa", img: "https://images.unsplash.com/photo-1530730419087-0b19280a6566?w=800&q=80" },
+                    { time: "21:30", transport: "3分", name: "Urbain飯店廣島中央", address: "廣島市中區", desc: "返回飯店。整理今天的戰利品，準備迎接最後一天的廣島行程。", cost: 0, map: "https://maps.google.com/?cid=18207534889234640725", web: "http://www.kuretake-inn.com/hiroshima/", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" }
+                ]
+            },
+            {
+                day: 7,
+                date: "2025-02-03",
+                title: "廣島職人：馬自達博物館與生活散策",
+                items: [
+                    { time: "07:30", transport: "14分", name: "Workman Plus", address: "廣島市西區", desc: "近年日本人氣爆棚的機能服飾品牌。價格親民且品質優良，是購入戶外與防寒衣物的秘密基地。", cost: 3000, map: "https://maps.google.com/?cid=8083666293288571928", web: "https://www.workman.co.jp/", img: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80" },
+                    { time: "09:00", transport: "16分", name: "麻里布珈琲 (早餐)", address: "廣島市中區紙屋町", desc: "在自家烘焙咖啡店享用早餐。香醇的咖啡搭配厚切吐司，享受悠閒的早晨時光。", cost: 800, map: "https://maps.google.com/?cid=3458117277781822911", web: "http://campagne.co.jp/marifu-coffee/", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80" },
+                    { time: "10:30", transport: "12分", name: "You me Town (SHIMAMURA/Avail)", address: "廣島市南區宇品", desc: "在地的大型購物中心。這裡有價格實惠的流行服飾品牌，適合全家大小一起挖寶。", cost: 3000, map: "https://maps.google.com/?cid=3811847912070496406", web: "http://www.izumi.jp/tenpo/miyuki", img: "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800&q=80" },
+                    { time: "12:20", transport: "6分", name: "CHERMSIDE (午餐)", address: "廣島市南區", desc: "馬自達博物館附近的咖啡廳。提供美味的三明治輕食，是參觀博物館前補充體力的好地方。", cost: 1200, map: "https://maps.google.com/?cid=10671100719884487894", web: "https://www.instagram.com/chermside.hiroshima/", img: "https://images.unsplash.com/photo-1475090169767-40ed8d18f67d?w=800&q=80" },
+                    { time: "14:00", transport: "11分", name: "馬自達博物館 (14:15導覽)", address: "廣島縣安藝郡府中町", desc: "廣島是Mazda的發源地。參觀博物館可以了解汽車製造的歷史與技術，還能親眼看到實際的組裝生產線，車迷必朝聖！", cost: 0, map: "https://maps.google.com/?cid=1042964756287018034", web: "http://www.mazda.com/ja/about/museum/", img: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80" },
+                    { time: "16:00", transport: "8分", name: "AEON MALL 府中", address: "廣島縣安藝郡府中町", desc: "廣島最大級的購物中心。擁有數百間店鋪與美食街，是採買最後伴手禮與享受晚餐的一站式滿足點。", cost: 5000, map: "https://maps.google.com/?cid=2477027505278289521", web: "https://hiroshimafuchu-aeonmall.com/?utm_source=google_maps&utm_medium=organic&utm_campaign=website", img: "https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=800&q=80" },
+                    { time: "19:00", transport: "15分", name: "安德森 廣島本店", address: "廣島市中區本通", desc: "日本知名的麵包品牌本店。建築本身是改建自被爆建物，具有歷史意義。在這裡買些好吃的麵包當作明天的早餐或點心。", cost: 1500, map: "https://maps.google.com/?cid=45590683582395628", web: "https://www.andersen.co.jp/hiroshima/?utm_source=googlemb&utm_medium=organic", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80" },
+                    { time: "21:10", transport: "5分", name: "Urbain飯店廣島中央", address: "廣島市中區", desc: "最後一晚在廣島。整理行李，確認沒有遺漏任何物品，帶著滿足的心情入睡。", cost: 0, map: "https://maps.google.com/?cid=13955380848606991059", web: "https://www.urbain-hotels.com/hce", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80" }
+                ]
+            },
+            {
+                day: 8,
+                date: "2025-02-04",
+                title: "廣島再會：滿載回憶的歸途",
+                items: [
+                    { time: "07:00", transport: "", name: "飯店退房", address: "廣島市中區", desc: "早安。在飯店辦理退房手續，帶著滿滿的戰利品與回憶，準備前往機場。", cost: 0, map: "https://maps.google.com/?cid=18207534889234640725", web: "http://www.kuretake-inn.com/hiroshima/", img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80" },
+                    { time: "08:00", transport: "", name: "日產租車 廣島機場店", address: "廣島機場周邊", desc: "抵達租車公司歸還車輛。請記得加滿油再還車，並檢查是否有遺留物品在車上。", cost: 0, map: "https://maps.google.com/?cid=4445263458050298852", web: "https://nissan-rentacar.com/shops/3M2G1", img: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80" },
+                    { time: "11:15", transport: "飛行", name: "廣島機場 (華航CI113)", address: "廣島縣三原市", desc: "搭乘中華航空 CI113 (11:15-13:10) 返回台北。在機場做最後的免稅品採購，揮別美麗的廣島。", cost: 0, map: "https://maps.google.com/?cid=11446563014474813844", web: "http://www.hij.airport.jp/", img: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80" }
+                ]
+            }
+        ];
+
+        // --- 組件: 首頁 ---
+        const HomePage = ({ onSelectDay }) => (
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#fff5f7]">
+                {/* 裝飾背景 */}
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    <Flower2 className="absolute top-10 left-10 text-pink-300 opacity-50 animate-bounce" size={48} />
+                    <Flower2 className="absolute bottom-20 right-20 text-pink-300 opacity-50 animate-bounce" style={{animationDelay: '1s'}} size={64} />
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5">
+                         <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80" className="w-[800px] h-auto rounded-full blur-sm" />
+                    </div>
+                </div>
+
+                <div className="z-10 text-center max-w-5xl w-full">
+                    <div className="mb-4 text-torii flex justify-center items-center gap-2">
+                        <span className="w-16 h-[1px] bg-torii"></span>
+                        <span className="text-sm font-bold tracking-widest">HIROSHIMA TOUR 2025</span>
+                        <span className="w-16 h-[1px] bg-torii"></span>
+                    </div>
+                    
+                    <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6 tracking-wider leading-tight">
+                        廣島・瀨戶內之息<br/>
+                        <span className="text-2xl md:text-4xl text-torii font-normal mt-2 block">山海與和平的八日詩篇</span>
+                    </h1>
+                    
+                    <p className="text-gray-600 mb-12 text-lg font-light tracking-wide">
+                        2025.01.28 — 2025.02.04
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {ITINERARY.map((day) => (
+                            <button
+                                key={day.day}
+                                onClick={() => onSelectDay(day.day)}
+                                className="group relative bg-white bg-opacity-80 backdrop-blur-sm p-6 rounded-xl card-shadow hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-left border-t-4 border-torii overflow-hidden"
+                            >
+                                <div className="absolute -right-4 -top-4 text-9xl font-bold text-gray-100 group-hover:text-red-50 transition-colors pointer-events-none">
+                                    {day.day}
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="bg-red-100 text-torii text-xs font-bold px-2 py-1 rounded">DAY {day.day}</span>
+                                        <span className="text-xs text-gray-500">{day.date}</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-800 leading-snug group-hover:text-torii transition-colors">
+                                        {day.title.split('：')[1]}
+                                    </h3>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- 組件: 單日詳情頁 ---
+        const DayDetail = ({ dayData, onBack }) => {
+            const totalCost = dayData.items.reduce((sum, item) => sum + item.cost, 0);
+
+            return (
+                <div className="min-h-screen pb-20 bg-gray-50">
+                    {/* 頂部導覽列 */}
+                    <div className="sticky top-0 z-50 bg-white/90 backdrop-blur shadow-sm border-b border-gray-100">
+                        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                            <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-torii transition px-3 py-1 rounded-full hover:bg-gray-100">
+                                <ArrowLeft size={20} />
+                                <span className="hidden sm:inline">返回首頁</span>
+                            </button>
+                            <div className="text-center">
+                                <h2 className="text-lg font-bold text-gray-800">DAY {dayData.day}</h2>
+                                <p className="text-xs text-gray-500">{dayData.date}</p>
+                            </div>
+                            <div className="w-20"></div> {/* 佔位符保持平衡 */}
+                        </div>
+                    </div>
+
+                    {/* 標題區 */}
+                    <div className="bg-torii text-white py-12 md:py-16 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/seigaiha.png')]"></div>
+                        <h1 className="text-2xl md:text-4xl font-bold relative z-10 px-4">{dayData.title}</h1>
+                    </div>
+
+                    {/* 行程列表區 */}
+                    <div className="max-w-6xl mx-auto px-4 py-12">
+                        <div className="relative space-y-12">
+                            {/* 中央時間軸線 (Desktop) */}
+                            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-red-200 transform -translate-x-1/2"></div>
+
+                            {dayData.items.map((item, index) => (
+                                <div key={index} className={`flex flex-col md:flex-row items-center gap-8 ${index % 2 === 0 ? '' : 'md:flex-row-reverse'} relative group`}>
+                                    
+                                    {/* 時間點 (Desktop) */}
+                                    <div className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white border-4 border-red-200 rounded-full items-center justify-center z-10 shadow-sm group-hover:border-torii transition-colors">
+                                        <div className="w-3 h-3 bg-torii rounded-full"></div>
+                                    </div>
+
+                                    {/* 圖片區塊 (Outer) */}
+                                    <div className="w-full md:w-1/2">
+                                        <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg transform transition duration-500 group-hover:scale-[1.02]">
+                                            <img 
+                                                src={item.img} 
+                                                alt={item.name} 
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {e.target.src = 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=800&q=80'}} // Fallback image
+                                            />
+                                            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-4 py-1.5 rounded-full text-sm font-bold text-torii flex items-center shadow-md">
+                                                <Clock size={16} className="mr-1.5" />
+                                                {item.time}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 內容區塊 (Inner) */}
+                                    <div className="w-full md:w-1/2">
+                                        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative">
+                                            {/* 裝飾角標 */}
+                                            <div className={`absolute top-0 w-full h-1 bg-gradient-to-r from-red-200 to-pink-200 ${index % 2 === 0 ? 'left-0 rounded-tl-2xl' : 'right-0 rounded-tr-2xl'}`}></div>
+
+                                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                <h3 className="text-xl font-bold text-gray-800">{item.name}</h3>
+                                                {item.transport && (
+                                                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md flex items-center border border-blue-100">
+                                                        {item.transport.includes('飛行') || item.transport.includes('船') ? <Anchor size={12} className="mr-1"/> : <Car size={12} className="mr-1"/>}
+                                                        {item.transport}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-start text-gray-500 text-sm mb-4">
+                                                <MapPin size={16} className="mr-1.5 mt-0.5 flex-shrink-0 text-red-400" />
+                                                <span>{item.address}</span>
+                                            </div>
+
+                                            <p className="text-gray-600 text-sm leading-relaxed mb-6 bg-gray-50 p-4 rounded-xl border-l-4 border-red-200">
+                                                {item.desc}
+                                            </p>
+
+                                            <div className="flex items-end justify-between border-t border-gray-100 pt-4">
+                                                <div>
+                                                    <p className="text-xs text-gray-400 mb-1">預估花費</p>
+                                                    <p className="font-bold text-torii text-lg">
+                                                        ¥{item.cost.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {item.map && (
+                                                        <a href={item.map} target="_blank" className="p-2.5 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors" title="Google Maps">
+                                                            <MapPin size={20} />
+                                                        </a>
+                                                    )}
+                                                    {item.web && (
+                                                        <a href={item.web} target="_blank" className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors" title="官方網站">
+                                                            <ExternalLink size={20} />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 底部總計 */}
+                        <div className="mt-16 max-w-2xl mx-auto">
+                            <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-pink-100 text-center relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-red-300 to-pink-300"></div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-2">
+                                    <Calculator className="text-torii" />
+                                    本日行程預估總花費
+                                </h3>
+                                <p className="text-5xl font-bold text-torii mb-2 font-zen">
+                                    ¥{totalCost.toLocaleString()}
+                                </p>
+                                <p className="text-sm text-gray-400">※ 此金額為每人預估費用（含門票、餐飲、購物），不含機票與住宿分攤。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 主程式入口 ---
+        const App = () => {
+            const [currentDay, setCurrentDay] = useState(null);
+
+            return (
+                <div className="antialiased">
+                    {currentDay === null ? (
+                        <HomePage onSelectDay={setCurrentDay} />
+                    ) : (
+                        <DayDetail 
+                            dayData={ITINERARY.find(d => d.day === currentDay)} 
+                            onBack={() => setCurrentDay(null)} 
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
